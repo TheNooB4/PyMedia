@@ -20,24 +20,47 @@ except ImportError:
     subprocess.run('pip install tqdm', shell=True)
     subprocess.run('pip install pyfiglet', shell=True)
 
-# Check if aria2 is installed and install it if not
-aria2c_installed = False
-
+# Check if aria2c is installed
 try:
-    output = subprocess.check_output('aria2c -v', shell=True)
+    subprocess.run('aria2c -v', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     aria2c_installed = True
-except subprocess.CalledProcessError:
-    if 'android' in sys.platform:
+except FileNotFoundError:
+    aria2c_installed = False
+
+    # Install aria2c based on the operating system
+    if os.name == "posix":
+        subprocess.run('sudo apt-get install aria2', shell=True)
+    elif os.name == "nt":
         subprocess.run('pkg install aria2', shell=True)
     else:
-        subprocess.run('sudo apt-get update', shell=True)
-        subprocess.run('sudo apt-get install aria2', shell=True)
-    aria2c_installed = True
+        print(f"\n{Fore.RED}❌ Unsupported operating system.{Fore.RESET}")
+        exit()
+    
+    print(f"\n{Fore.CYAN}✅ aria2c installed successfully.{Fore.RESET}")
 
-#if not aria2c_installed:
-    #print(f"\n{Fore.RED}❌ Error: aria2c is not installed. Please manually install aria2c to enable faster downloads.{Fore.RESET}")
+def download_media(name, title, download_format='mp4'):
+    if download_format not in ['mp4', 'mp3']:
+        raise ValueError(f"\n{Fore.RED}❌ Invalid download format. Please choose 'mp4' or 'mp3'.{Fore.RESET}")
     
+    system = os.name
+
+    if system == "nt":
+        output_folder = os.path.join(os.path.expanduser('~'), 'Desktop', 'PyMedia')
+    elif system == "posix":
+        output_folder = '/sdcard/PyMedia'
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+    else:
+        print(f"\n{Fore.RED}❌ Unsupported operating system.{Fore.RESET}")
+        return
     
+    search_query = f'ytsearch:{name} {title}'
+
+    command = f'yt-dlp -x --audio-format mp3 --extract-audio ' if download_format == 'mp3' else 'yt-dlp '
+    command += f'--output "{output_folder}/{title}.%(ext)s" --external-downloader aria2c --merge-output-format mp4 "{search_query}"'
+
+    subprocess.run(command, shell=True)
+
 def get_user_choice():
     clear_screen()
     
@@ -59,39 +82,13 @@ def get_user_choice():
     print(f"\n{Fore.CYAN} 1. Download Audio\n 2. Download Video\n 3. Quit{Fore.RESET}")
     return input("\n ➡️ Enter your choice 👇: ")
 
-
 def clear_screen():
     subprocess.run('clear' if 'posix' in os.name else 'cls', shell=True)
-
 
 def download_another():
     print(f"\n\n📌 {Fore.CYAN} DO YOU HAVE ANOTHER AUDIO OR VIDEO TO DOWNLOAD?")
     print(f"✅ 1. YES\n❌ 2. NO{Fore.RESET}")
     return input("\n🎯 Enter your choice: ")
-
-
-def download_media(name, title, download_format='mp4'):
-    if download_format not in ['mp4', 'mp3']:
-        raise ValueError(f"\n{Fore.RED}❌ Invalid download format. Please choose 'mp4' or 'mp3'.{Fore.RESET}")
-    
-    system = os.name
-
-    if system == "nt":
-        output_folder = os.path.join(os.path.expanduser('~'), 'Desktop', 'PyMedia')
-    elif system == "posix":
-        output_folder = '/sdcard/PyMedia'
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
-    else:
-        print(f"\n{Fore.RED}❌ Unsupported operating system.{Fore.RESET}")
-        return
-    
-    search_query = f'ytsearch:{name} {title}'
-
-    command = f'yt-dlp --format mp4 --output "{output_folder}/{title}.mp4" "{search_query}"'
-
-    subprocess.run(command, shell=True)
-
 
 while True:
     option = get_user_choice()
