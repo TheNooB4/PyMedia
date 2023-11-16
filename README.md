@@ -15,7 +15,7 @@
   <li>Install Python and Git by running the following command:</li>
   <pre><code>pkg install python git</code></pre>
   <li>Clone the PyMedia repository by running the following command:</li>
-  <pre><code>git clone https://github.com/username/PyMedia.git</code></pre>
+  <pre><code>git clone https://github.com/TheNooB4/PyMedia.git</code></pre>
   <li>Navigate to the PyMedia directory:</li>
 </ol>
 
